@@ -1,0 +1,88 @@
+# National Flag Rankings App — Architecture Plan
+
+## 1. Brand & UX Direction
+- Match **SLCTFlag.com** aesthetics: bold red/white/blue palette, athletic typography, clean cards, high-contrast CTAs.
+- Friendly, game-like UI for coaches (drag-and-drop cards, subtle animations, badge-like rankings).
+- Public portal mirrors SLCT look with hero sections, state cards, and historical charts.
+
+## 2. User Roles & Permissions
+| Role | Access |
+| --- | --- |
+| Public Submitter | Submit team nominations (must verify phone + email). |
+| Coach/Judge (16 primary + 4 alternates per state) | Moderate submission pool to top 25; drag & drop rank top 10 per division; auto notifications + 48h deadlines. |
+| State Director | Manages coaches/alternates, reviews deleted submissions, monitors ballots, overrides/publishes rankings. |
+| Super Admin | Full control across all states, scheduling, system settings. |
+
+## 3. Divisions & States
+- Divisions: Boys & Girls; 8U, 10U, 12U, 14U (8 total per state).
+- Initial states: TX, FL, CA, NM, OK, LA, PA, NY, KS, CO, WA, OR (12 total).
+
+## 4. Workflow Overview
+1. **Submission**: Anyone submits team (state + division) → instant entry to pool. Phone/email verification required.
+2. **Coach Moderation**: Coaches trim pool down to 25 (deleted entries stored in audit log). Notifications for new submissions.
+3. **Ballot Window**: When ranking cycle opens (monthly), coaches drag/select top 10 from 25, assign 10-1 points. Re-orderable before submit.
+4. **Deadline Rules**: 48h to submit; system auto-reminds; if no vote, replace with alternate (logged). Directors can override/publish early.
+5. **Scoring & Publish**: Once 16 votes in (or override), totals computed, top 10 published automatically to public portal + historical log.
+6. **History & Analytics**: Keep monthly snapshots, team profiles (weeks at #1, top 5, top 10), and national all-time leaderboard (sum of monthly points).
+
+## 5. System Architecture
+- **Frontend**: React + Vite + Tailwind + Zustand/Redux for state; drag & drop via dnd-kit.
+- **Backend**: Node/Express (or Next.js API routes). Drizzle ORM with Postgres (Supabase or Neon). Scheduled tasks via CRON/Temporal for ballot windows.
+- **Auth**: Magic links + Twilio Verify for public submissions; password + optional 2FA for coaches/directors. JWT sessions via Clerk/Supabase Auth or custom.
+- **Notifications**: Email (Resend/SendGrid) + SMS (Twilio) for submission alerts, ballot reminders, and publication notices.
+- **Storage**: S3-compatible bucket for team logos if needed.
+
+## 6. Database Schema (Drizzle)
+- `states` (id, name, slug)
+- `divisions` (id, state_id, gender, age_group)
+- `teams` (id, name, city, club_name, contact info, gender, age_group, state_id)
+- `submissions` (id, team_id, submitter_name, phone, email, notes, status, deleted_by, deleted_reason)
+- `coaches` (id, state_id, name, email, phone, role=primary|alternate, status)
+- `ballot_windows` (id, state_id, division_id, month, year, status=open|closed, deadline_at, override_flag)
+- `ballots` (id, window_id, coach_id, submitted_at)
+- `ballot_rankings` (id, ballot_id, team_id, rank, points)
+- `historical_rankings` (window_id, team_id, total_points, rank, published_at)
+- `team_stats` materialized view (team_id, weeks_at_1, weeks_top5, weeks_top10, total_points)
+- `notifications` log (type, recipient, payload, status)
+
+## 7. API Endpoints (REST)
+- **Public**:
+  - `POST /api/submissions` (with phone/email verification)
+  - `GET /api/rankings?state=TX&gender=boys&age=8u`
+  - `GET /api/rankings/history?state=TX&division=boys-8u`
+  - `GET /api/teams/:id/stats`
+- **Coach**:
+  - `GET /api/submissions/pool?division=...`
+  - `PATCH /api/submissions/:id` (delete/restore)
+  - `GET /api/ballot-window/current`
+  - `POST /api/ballots` (submit ranking order)
+- **Director**:
+  - `GET /api/director/dashboard`
+  - `PATCH /api/ballot-window/:id/override`
+  - `POST /api/coaches` (add/remove)
+- **Admin**:
+  - CRUD for states/divisions, schedule windows, manage alternates, etc.
+
+## 8. UI Components
+- Submission form (multi-step, verification step).
+- Coach dashboard (pool of 25 cards + drag list of 10 slots, reorder animation, progress indicators).
+- Director dashboard (submissions table, deleted log with restore, coach status grid, override button).
+- Public rankings page (state selector, division tabs, top 10 cards, search, share buttons).
+- Team profile modal (stats, history chart).
+
+## 9. Task Board (MVP)
+1. **Setup**: Repo, lint/prettier, Tailwind theme, layout shell.
+2. **Database & API scaffolding**: Drizzle migrations, base endpoints, auth wiring.
+3. **Submission Flow**: Public form + verification + ingestion.
+4. **Coach Pool UI**: Pool moderation, drag-and-drop ranking component, voting API.
+5. **Director Console**: Dashboard with coach states, override controls.
+6. **Publish & History**: Scoring logic, ranking snapshots, public portal UI.
+7. **Notifications**: Email/SMS service + templates, reminder schedule.
+8. **Testing & Deployment**: e2e tests (Playwright), CI pipeline, Replit deploy hooks.
+
+## 10. Next Steps (Tonight)
+- Finalize wireframes/sketches.
+- Draft database ERD.
+- Prepare Tailwind brand tokens (colors, fonts, spacing).
+- Outline API contracts in an OpenAPI/YAML file.
+- Prep initial Drizzle migrations and seed scripts for states/divisions.
