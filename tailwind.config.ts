@@ -11,6 +11,15 @@ export default {
         sm: ".1875rem", /* 3px */
       },
       colors: {
+        // SLCT Flag brand palette
+        slct: {
+          navy: "#0E1A3A",
+          red: "#D7263D",
+          gold: "#F5C242",
+          sky: "#6EC1E4",
+          slate: "#1F2937",
+          white: "#FFFFFF",
+        },
         // Flat / base colors (regular buttons)
         background: "hsl(var(--background) / <alpha-value>)",
         foreground: "hsl(var(--foreground) / <alpha-value>)",
