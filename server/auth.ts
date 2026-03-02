@@ -1,0 +1,10 @@
+import { createHash } from "crypto";
+
+export async function hashPassword(password: string): Promise<string> {
+  return createHash("sha256").update(password + process.env.SESSION_SECRET).digest("hex");
+}
+
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  const hashed = await hashPassword(password);
+  return hashed === hash;
+}
