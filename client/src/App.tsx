@@ -41,11 +41,19 @@ function App() {
           <div className="flex h-screen w-full">
             <AppSidebar />
             <div className="flex flex-col flex-1 min-w-0">
-              <header className="flex items-center justify-between px-4 py-2 border-b border-border bg-background sticky top-0 z-50 shrink-0">
-                <SidebarTrigger data-testid="button-sidebar-toggle" className="text-muted-foreground" />
-                <div className="flex items-center gap-2">
-                  <ThemeToggle />
+              <header className="relative flex items-center justify-between px-4 sm:px-6 py-3 bg-gradient-to-r from-[#0E1A3A] via-[#15264E] to-[#D7263D] text-white shadow-lg sticky top-0 z-50 shrink-0">
+                <div className="flex items-center gap-3">
+                  <SidebarTrigger data-testid="button-sidebar-toggle" className="text-white/80 hover:text-white" />
+                  <div>
+                    <p className="text-sm uppercase tracking-[0.3em] text-white/70">Go Team Sports</p>
+                    <p className="text-xl font-semibold leading-tight">National Flag Rankings</p>
+                  </div>
                 </div>
+                <div className="flex items-center gap-3">
+                  <span className="hidden md:block text-xs uppercase tracking-wide text-white/70">Dark Mode</span>
+                  <ThemeToggle className="bg-white/15 hover:bg-white/25 text-white border-white/20" />
+                </div>
+                <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
               </header>
               <main className="flex-1 overflow-hidden">
                 <Router />
